@@ -1,0 +1,309 @@
+<div class="container pt-5">
+  <!-- Messages -->
+  <div *ngIf="successMessage" class="alert alert-success" role="alert">
+    {{ successMessage }}
+    <button (click)="clearSuccessMessage()" aria-label="Close" class="close" type="button">
+      <span aria-hidden="true">×</span>
+    </button>
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+    {{ errorMessage }}
+    <button (click)="clearErrorMessage()" aria-label="Close" class="close" type="button">
+      <span aria-hidden="true">×</span>
+    </button>
+  </div>
+
+  <!-- Project info -->
+  <form class="row">
+    <h1 *ngIf="!isInEditMode" class="col-md-9">{{ project?.name }}</h1>
+    <div *ngIf="isInEditMode" class="col-md-9">
+      <input [(ngModel)]="newProject.name"
+             [class.is-invalid]="!validate.nonEmpty(newProject.name)"
+             [class.is-valid]="validate.nonEmpty(newProject.name)"
+             class="form-control h1" id="name" name="name"
+             placeholder="Project name can't be empty"
+             type="text">
+    </div>
+
+    <div class="col-md-3 btn-group">
+      <div *ngIf="currentUserIsProjectAdmin() && !isInEditMode" class="ml-auto">
+        <button (click)="enterEditMode()"
+                class="btn btn-info height-limited-button mr-3"
+                type="button">
+          <i class="fas fa-pen"></i> Edit
+        </button>
+        <button class="btn btn-danger height-limited-button"
+                data-target="#archiveProjectConfirmDialog" data-toggle="modal"
+                type="button">
+          <i class="fas fa-archive"></i> Archive
+        </button>
+      </div>
+
+      <div *ngIf="currentUserIsProjectAdmin() && isInEditMode" class="ml-auto">
+        <button (click)="saveEdit()" class="btn btn-primary height-limited-button mr-3" type="submit">
+          <i class="fas fa-pen"></i> Save
+        </button>
+        <button (click)="cancelEdit()" class="btn btn-secondary height-limited-button" type="button">
+          <i class="fas fa-times-circle"></i> Cancel
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <p class="text-muted">Created on {{ project?.createdOn | date: 'medium' }}</p>
+  <p class="description" *ngIf="!isInEditMode">{{ project?.description }}</p>
+  <textarea *ngIf="isInEditMode"
+            [(ngModel)]="newProject.description"
+            class="form-control" id="description" name="description"
+            cols="80" rows="10">
+  </textarea>
+
+  <!-- Admins -->
+  <div class="row">
+    <div class="userList col-12">
+      <a (click)="updateAdminListState()"
+         aria-expanded="true"
+         class="btn text-left p-3 d-block bg-light"
+         data-target="#adminList" data-toggle="collapse"
+         type="button">
+        <span [class.d-none]="isAdminListExpanded">
+          <i class="fas fa-angle-right"></i>
+        </span>
+        <span [class.d-none]="!isAdminListExpanded">
+          <i class="fas fa-angle-down"></i>
+        </span>
+        {{ admins?.length }} {{ admins?.length > 1 ? 'Admins' : 'Admin' }}
+      </a>
+
+      <ul class="list-group collapse" id="adminList">
+        <li *ngFor="let admin of admins" class="list-group-item">
+          <div class="row">
+            <div class="col-md-9">
+              <a type="button">{{ admin.displayName }}</a>
+            </div>
+            <div class="col-md-3 text-right" title="System admin cannot be demoted">
+              <button (click)="removeAdmin(admin.id)"
+                      *ngIf="auth.user.admin"
+                      [disabled]="admin.admin"
+                      class="btn btn-danger m-2"
+                      type="button">
+                Delete
+              </button>
+            </div>
+          </div>
+        </li>
+        <li *ngIf="auth.user.admin" class="list-group-item text-center">
+          <a (click)="beginPromoteMemberToAdmin()"
+             class="bg-light"
+             data-target="#selectMemberToPromoteToAdminDialog"
+             data-toggle="modal"
+             type="button">
+            <i class="fas fa-plus"></i> Promote a member to project admin
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Members -->
+  <div class="row">
+    <div class="userList col-12">
+      <a (click)="updateMemberListState()"
+         aria-expanded="true"
+         class="btn text-left p-3 d-block bg-light"
+         data-target="#memberList" data-toggle="collapse"
+         type="button">
+        <span [class.d-none]="isMemberListExpanded">
+          <i class="fas fa-angle-right"></i>
+        </span>
+        <span [class.d-none]="!isMemberListExpanded">
+          <i class="fas fa-angle-down"></i>
+        </span>
+        {{ members?.length }} {{ members?.length > 1 ? 'Members' : 'Member' }}
+      </a>
+
+      <ul class="list-group collapse" id="memberList">
+        <li *ngFor="let member of members" class="list-group-item">
+          <div class="row">
+            <div class="col-md-9">
+              <a type="button">{{ member.displayName }}</a>
+            </div>
+            <div class="col-md-3 text-right" title="System admin cannot be removed from project">
+              <button (click)="removeMember(member.id)"
+                      *ngIf="currentUserIsProjectAdmin()"
+                      [disabled]="userIsProjectAdmin(member.id)"
+                      class="btn btn-danger m-2"
+                      type="button">
+                Delete
+              </button>
+            </div>
+          </div>
+        </li>
+        <li *ngIf="currentUserIsProjectAdmin()" class="list-group-item text-center">
+          <a (click)="beginAddUserToProject()"
+             class="bg-light"
+             data-target="#selectUserToAddToProjectDialog"
+             data-toggle="modal"
+             type="button">
+            <i class="fas fa-plus"></i> Add user to project
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Activities -->
+  <div class="row">
+    <div class="activities col-12">
+      <a (click)="updateActivityListState()"
+         aria-expanded="true"
+         class="btn text-left p-3 d-block bg-light"
+         data-target="#activityList" data-toggle="collapse"
+         type="button">
+        <span [class.d-none]="isActivityListExpanded">
+          <i class="fas fa-angle-right"></i>
+        </span>
+        <span [class.d-none]="!isActivityListExpanded">
+          <i class="fas fa-angle-down"></i>
+        </span>
+        {{ activities?.length }} {{ activities?.length > 1 ? 'Activities' : 'Activity' }}
+      </a>
+
+      <ul class="list-group collapse" id="activityList">
+        <li *ngFor="let activity of activities" class="list-group-item">
+          <h4>
+            <a routerLink="/activities/{{ activity.id }}">{{ activity.name }}</a>
+            <span [class.badge-danger]="activity.lockedOn !== null"
+                  [class.badge-success]="activity.lockedOn === null"
+                  class="badge ml-2">
+              {{ activity.lockedOn !== null ? 'Locked' : 'Open' }}
+            </span>
+          </h4>
+          <div>{{ activity.description }}</div>
+        </li>
+        <li *ngIf="currentUserIsProjectAdmin()" class="list-group-item text-center">
+          <a class="bg-light" routerLink="/activities/add/{{ project?.id }}">
+            <i class="fas fa-plus"></i> Add activity
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Dialogs -->
+<div class="modal fade" id="archiveProjectConfirmDialog" role="dialog" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Archive project</h4>
+      </div>
+
+      <div class="modal-body">
+        Archived project will no longer be editable and is hidden by default,
+        do you want to archive this project?
+      </div>
+
+      <div class="modal-footer">
+        <button (click)="archive()" class="btn btn-danger" data-dismiss="modal" type="button">
+          Archive project
+        </button>
+        <button class="btn btn-secondary" data-dismiss="modal" type="button">
+          No, do not archive
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="selectMemberToPromoteToAdminDialog" role="dialog" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Promote member to project admin</h4>
+      </div>
+
+      <form class="modal-body">
+        <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+          {{ errorMessage }}
+          <button (click)="clearErrorMessage()" aria-label="Close" class="close" type="button">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+
+        <div *ngIf="regularMembers?.length === 0">
+          No regular member to promote
+        </div>
+        <div *ngFor="let member of regularMembers" class="form-check d-flex">
+          <input (change)="selectMemberToPromote($event)"
+                 class="form-check-input"
+                 id="promoteToAdminRadioId{{ member.username }}"
+                 name="memberSelectedToPromoteToAdmin"
+                 type="checkbox"
+                 value="{{ member.id }}">
+          <label class="form-check-label flex-fill"
+                 for="promoteToAdminRadioId{{ member.username }}"
+                 title="{{ member.username }}">
+            {{ member.displayName }}
+          </label>
+        </div>
+      </form>
+
+      <div *ngIf="regularMembers?.length !== 0" class="modal-footer">
+        <button (click)="promoteToAdmin($event)" class="btn btn-primary" data-dismiss="modal" type="button">
+          Set to project admin
+        </button>
+        <button class="btn btn-secondary" data-dismiss="modal" type="button">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="selectUserToAddToProjectDialog" role="dialog" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Add user to project</h4>
+      </div>
+
+      <form class="modal-body">
+        <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+          {{ errorMessage }}
+          <button (click)="clearErrorMessage()" aria-label="Close" class="close" type="button">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+
+        <div *ngIf="usersNotInProject?.length === 0">
+          No user remaining to add into this project
+        </div>
+        <div *ngFor="let user of usersNotInProject" class="form-check d-flex">
+          <input (change)="selectUserToAddToProject($event)"
+                 class="form-check-input"
+                 id="addUserToProjectRadio{{ user.username }}"
+                 name="userSelectedToAddToProject"
+                 type="checkbox"
+                 value="{{ user.id }}">
+          <label class="form-check-label flex-fill"
+                 for="addUserToProjectRadio{{ user.username }}"
+                 title="{{ user.username }}">
+            {{ user.displayName }}
+          </label>
+        </div>
+      </form>
+
+      <div *ngIf="usersNotInProject?.length !== 0" class="modal-footer">
+        <button (click)="addUserToProject($event)" class="btn btn-primary" data-dismiss="modal" type="button">
+          Add to project
+        </button>
+        <button class="btn btn-secondary" data-dismiss="modal" type="button">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+

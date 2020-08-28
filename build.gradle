@@ -1,0 +1,74 @@
+plugins {
+    id 'java'
+    id "org.springframework.boot" version "2.3.2.RELEASE"
+}
+
+group 'com.tpssoft'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets {
+    unitTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+configurations {
+    unitTestImplementation.extendsFrom implementation
+    unitTestRuntimeOnly.extendsFrom runtimeOnly
+}
+
+task unitTest(type: Test) {
+    description = 'Run unit tests'
+    group = 'verification'
+
+    testClassesDirs = sourceSets.unitTest.output.classesDirs
+    classpath = sourceSets.unitTest.runtimeClasspath
+}
+
+test.shouldRunAfter unitTest
+check.dependsOn unitTest
+
+test {
+    useJUnitPlatform()
+}
+
+unitTest() {
+    useJUnitPlatform()
+}
+
+
+def springBootVersion = '2.3.2.RELEASE'
+def lombokVersion = '1.18.12'
+dependencies {
+    implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-mail:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
+    implementation "mysql:mysql-connector-java:8.0.21"
+    implementation "org.postgresql:postgresql:42.2.14"
+    implementation "jakarta.xml.bind:jakarta.xml.bind-api:2.3.3"
+    implementation "org.springframework.boot:spring-boot-starter-security:${springBootVersion}"
+    implementation "org.bouncycastle:bcprov-jdk15on:1.66"
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+    unitTestCompile "org.projectlombok:lombok:${lombokVersion}"
+    unitTestAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    unitTestCompile "org.junit.jupiter:junit-jupiter:5.6.2"
+    unitTestImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}") {
+        exclude group: "junit"
+        exclude group: "org.junit.vintage"
+    }
+
+    testCompile "org.projectlombok:lombok:${lombokVersion}"
+    testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    testCompile "org.junit.jupiter:junit-jupiter:5.6.2"
+    testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}") {
+        exclude group: "junit"
+        exclude group: "org.junit.vintage"
+    }
+}

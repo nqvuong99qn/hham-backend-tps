@@ -1,0 +1,24 @@
+<div class="container pt-5">
+  <h1 class="pb-3">User Dashboard</h1>
+  <div class="row">
+    <form class="col-md-8 ml-auto mb-3 form-inline">
+      <div class="btn-group ml-auto searchBox">
+        <input [(ngModel)]="searchTerm"
+               class="form-control ml-auto" name="searchTerm"
+               placeholder="Search by name..." type="text">
+        <button class="btn btn-secondary" (click)="searchByName()">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+  <div *ngFor="let activity of activityHaveOpen" class="col-12 card">
+    <div class="card-body">
+      <h4 class="card-title">
+        <a routerLink="/activities/{{ activity.id }}">{{ activity.name }}</a>
+      </h4>
+      <p class="card-text">{{ activity.description }}</p>
+      <p class="card-text text-muted">{{ activity.createdOn | date: 'full' }}</p>
+    </div>
+  </div>
+</div>

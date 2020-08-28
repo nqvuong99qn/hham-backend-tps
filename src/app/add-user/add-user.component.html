@@ -1,0 +1,46 @@
+<div class="container pt-5">
+  <div class="row">
+    <div class="col-md-3"></div>
+
+    <form *ngIf="!submitted" class="col-md-6">
+      <h3>Invite</h3>
+
+      <div class="form-group">
+        <label class="required-field" for="email">Email</label>
+        <input (focusout)="touched = true"
+               [(ngModel)]="email"
+               [class.is-invalid]="touched && !isValidEmail()"
+               [class.is-valid]="touched && isValidEmail()"
+               class="form-control" id="email" name="email"
+               required type="email">
+      </div>
+      <div *ngIf="touched && email.length === 0"
+           class="alert alert-danger" role="alert">
+        Email is required
+      </div>
+      <div *ngIf="touched && email.length > 0 && !isValidEmail()"
+           class="alert alert-danger" role="alert">
+        Invalid email
+      </div>
+
+      <div class="form-group">
+        <label for="project">Project:</label>
+        <select [(ngModel)]="projectId" class="form-control" id="project" name="projectId">
+          <option value="null">--- None ---</option>
+          <option *ngFor="let project of projects" value="{{ project.id }}">{{ project.name }}</option>
+        </select>
+      </div>
+
+      <div class="form-group text-center">
+        <input (click)="submit()" class="btn btn-primary" name="submit" type="submit" value="Invite">
+      </div>
+    </form>
+
+    <div *ngIf="submitted" class="col-md-6">
+      <p>Invitation sent to {{ email }}.</p>
+      <p><a routerLink="/users">Click here to get back to User Management page</a></p>
+    </div>
+
+    <div class="col-md-3"></div>
+  </div>
+</div>
