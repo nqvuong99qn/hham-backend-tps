@@ -6,6 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class SearchConstraints {
+public  class SearchConstraints{
     private List<SearchConstraint> constraints = new ArrayList<>();
 }

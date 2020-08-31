@@ -21,6 +21,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
             "order by u.id")
     List<User> getAdminsOfProject(int projectId);
 
+
     @Query("select u from users u " +
             "join u.memberships m " +
             "join m.project p " +

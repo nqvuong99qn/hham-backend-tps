@@ -15,6 +15,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class ActivationController {
     private final UserService userService;
 
+
+    @GetMapping("/")
+    public String a(){
+        return "aaa";
+    }
+
+
     @GetMapping("/invitation/{token:[0-9a-fA-F]+}")
     public SuccessResponse getInvitation(@PathVariable String token) {
         return new SuccessResponse().put("data", userService.getInvitation(token));
@@ -28,7 +35,7 @@ public class ActivationController {
                 dto.getPassword(),
                 dto.getEmail(),
                 dto.getDisplayName(),
-                dto.getJobTitle() != null ? dto.getJobTitle().getId() : null
-        ));
+                dto.getJobTitle() != null ? dto.getJobTitle().getId() : null)
+        );
     }
 }

@@ -4,6 +4,7 @@ import com.tpssoft.hham.dto.JobTitleDto;
 import com.tpssoft.hham.entity.JobTitle;
 import com.tpssoft.hham.exception.DuplicatedNameException;
 import com.tpssoft.hham.exception.JobTitleNotFoundException;
+import com.tpssoft.hham.exception.ResourceNotFoundException;
 import com.tpssoft.hham.repository.JobTitleRepository;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -49,11 +50,8 @@ public class JobTitleService {
      *
      * @throws JobTitleNotFoundException if the ID provided does not belong to any job title
      */
-    public JobTitleDto get(int id) {
-        return JobTitleDto.from(jobTitleRepository
-                .findById(id)
-                .orElseThrow(JobTitleNotFoundException::new)
-        );
+    public JobTitleDto getOne(int id){
+        return JobTitleDto.from(jobTitleRepository.findById(id).orElseThrow(ResourceNotFoundException::new));
     }
 
     /**
@@ -62,7 +60,7 @@ public class JobTitleService {
      * @return All job titles in the system, even the ones not being used anymore
      */
     public List<JobTitleDto> findAll() {
-        return findAll(List.of());
+        return jobTitleRepository.findAll().stream().map(JobTitleDto::from).collect(Collectors.toList());
     }
 
     /**
@@ -75,8 +73,7 @@ public class JobTitleService {
      *
      * @return A new stream with filters correctly appended
      */
-    private Stream<JobTitle> addConstraints(Stream<JobTitle> stream,
-                                            List<SearchConstraint> constraints) {
+    private Stream<JobTitle> addConstraints(Stream<JobTitle> stream,List<SearchConstraint> constraints) {
         for (var constraint : constraints) {
             switch (constraint.getFieldName()) {
                 case "name":
@@ -103,8 +100,8 @@ public class JobTitleService {
      *
      * @return All job titles satisfying the constraints
      */
-    public List<JobTitleDto> findAll(List<SearchConstraint> constraints) {
-        return addConstraints(jobTitleRepository.findAll().stream(), constraints)
+    public List<JobTitleDto> findAll(SearchConstraints constraints) {
+        return addConstraints(jobTitleRepository.findAll().stream(), constraints.getConstraints())
                 .map(JobTitleDto::from)
                 .collect(Collectors.toList());
     }
@@ -121,9 +118,7 @@ public class JobTitleService {
      * @throws JobTitleNotFoundException if the ID provided does not belong to any job title
      */
     public JobTitleDto update(int id, String name, BigDecimal monthlyAmount) {
-        var jobTitle = jobTitleRepository
-                .findById(id)
-                .orElseThrow(JobTitleNotFoundException::new);
+        var jobTitle = jobTitleRepository.findById(id).orElseThrow(JobTitleNotFoundException::new);
         jobTitle.setName(name);
         jobTitle.setMonthlyAmount(monthlyAmount);
         return JobTitleDto.from(jobTitleRepository.save(jobTitle));
@@ -139,9 +134,7 @@ public class JobTitleService {
      * @throws JobTitleNotFoundException if the ID provided does not belong to any job title
      */
     public JobTitleDto archive(int id) {
-        var jobTitle = jobTitleRepository
-                .findById(id)
-                .orElseThrow(JobTitleNotFoundException::new);
+        var jobTitle = jobTitleRepository.findById(id).orElseThrow(JobTitleNotFoundException::new);
         jobTitle.setArchivedOn(ZonedDateTime.now());
         return JobTitleDto.from(jobTitleRepository.save(jobTitle));
     }

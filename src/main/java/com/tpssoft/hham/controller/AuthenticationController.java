@@ -24,23 +24,30 @@ public class AuthenticationController {
     private final UserService userService;
     private final SessionService sessionService;
 
+    /**
+     * Use username, password to login
+     * Using service to authenticate for logging
+     * @param request
+     * @param loginRequest
+     * @return
+     */
     @PostMapping("/login")
-    public SuccessResponse login(HttpServletRequest request,
-                                 @RequestBody LoginRequest loginRequest) {
+    public SuccessResponse login(HttpServletRequest request, @RequestBody LoginRequest loginRequest) {
         if (!sessionService.authenticate(loginRequest.getUsername(), loginRequest.getPassword())) {
             throw new AuthenticationFailureException();
         }
         String ipAddress = request.getRemoteAddr();
         String userAgent = request.getHeader("User-Agent");
-        var session = sessionService.createFor(
-                loginRequest.getUsername(),
-                ipAddress,
-                userAgent
-        );
+        var session = sessionService.createFor(loginRequest.getUsername(), ipAddress, userAgent);
         var user = userService.getByUsername(loginRequest.getUsername());
         return new SuccessResponse().put("session", session).put("user", user);
     }
 
+    /**
+     * Logout, destroy section.
+     * @param currentUser
+     * @return
+     */
     @PostMapping("/logout")
     public SuccessResponse logout(@AuthenticationPrincipal HhamUserDetails currentUser) {
         sessionService.destroyToken(currentUser.getToken());

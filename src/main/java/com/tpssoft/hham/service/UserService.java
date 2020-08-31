@@ -8,13 +8,7 @@ import com.tpssoft.hham.entity.Invitation;
 import com.tpssoft.hham.entity.JobTaken;
 import com.tpssoft.hham.entity.Membership;
 import com.tpssoft.hham.entity.User;
-import com.tpssoft.hham.exception.DuplicatedEmailException;
-import com.tpssoft.hham.exception.IllegalOperationException;
-import com.tpssoft.hham.exception.InvitationNotFoundException;
-import com.tpssoft.hham.exception.JobTitleNotFoundException;
-import com.tpssoft.hham.exception.NoPrivilegeException;
-import com.tpssoft.hham.exception.PasswordRequirementsNotMeetException;
-import com.tpssoft.hham.exception.UserNotFoundException;
+import com.tpssoft.hham.exception.*;
 import com.tpssoft.hham.repository.InvitationRepository;
 import com.tpssoft.hham.repository.JobTakenRepository;
 import com.tpssoft.hham.repository.JobTitleRepository;
@@ -22,6 +16,7 @@ import com.tpssoft.hham.repository.MembershipRepository;
 import com.tpssoft.hham.repository.UserRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.dom4j.util.UserDataDocumentFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -47,6 +42,17 @@ public class UserService {
     private final MembershipRepository membershipRepository;
     private final ServiceHelper serviceHelper;
 
+
+    /**
+     * Create  user and save it in DB
+     * @param username  Username of user
+     * @param plainPassword  password of User fill out will be encoded then saved in database
+     * @param email         autofill this field
+     * @param displayName   User fills out this field
+     * @param jobTitleId    choose this field
+     * @return
+     *
+     */
     public UserDto create(@NonNull String username,
                           @NonNull String plainPassword,
                           @NonNull String email,
@@ -54,9 +60,8 @@ public class UserService {
                           Integer jobTitleId) {
         if (userRepository.existsByEmail(email)) {
             throw new DuplicatedEmailException(String.format(
-                    "The email %s cannot be used because it belongs to an existing user",
-                    email
-            ));
+                    "The email %s cannot be used because it belongs to an existing user", email)
+            );
         }
         var user = new User();
         user.setUsername(username);
@@ -71,7 +76,6 @@ public class UserService {
             jobTakenRepository.save(new JobTaken(userDto.getId(), jobTitleId));
             userDto.setJobTitle(JobTitleDto.from(jobTitle));
         }
-
         userDto.setPassword(null);
         userDto.setHashedPassword(null);
         invitationRepository.deleteAllByEmail(email);
@@ -98,7 +102,6 @@ public class UserService {
                           @NonNull String email,
                           @NonNull String displayName,
                           Integer jobTitleId) {
-
         if (activationToken == null) {
             throw new NoPrivilegeException("Activation token is missing");
         }
@@ -138,6 +141,15 @@ public class UserService {
         userRepository.save(user);
     }
 
+    /**
+     * Update User for some below field
+     * @param id
+     * @param username
+     * @param displayName
+     * @param email
+     * @param jobTitleId
+     * @return
+     */
     public UserDto update(int id,
                           @NonNull String username,
                           @NonNull String displayName,
@@ -217,18 +229,14 @@ public class UserService {
     }
 
     /**
-     * Get information of a specific user
-     *
-     * @param id ID of the user to read
-     *
-     * @return Information of the specified user
-     *
-     * @throws UserNotFoundException if the ID provided does not belong to any user
+     * Get user by id
+     * @param id
+     * @return
      */
-    public UserDto get(int id) {
+    public UserDto findOne(int id) {
         return UserDto.from(userRepository
                 .findById(id)
-                .orElseThrow(UserNotFoundException::new)
+                .orElseThrow(ResourceNotFoundException::new)
         );
     }
 
@@ -237,8 +245,8 @@ public class UserService {
      *
      * @return All users in the system
      */
-    public List<UserDto> findAll() {
-        return findAll(List.of());
+    public List<UserDto> findAll(){
+        return userRepository.findAll().stream().map(UserDto::from).collect(Collectors.toList());
     }
 
     /**
@@ -249,8 +257,8 @@ public class UserService {
      *
      * @return A new stream with filters corresponding to the constraints appended
      */
-    private Stream<User> addConstraints(Stream<User> stream, List<SearchConstraint> constraints) {
-        for (var constraint : constraints) {
+    private Stream<User> addConstraints(Stream<User> stream, SearchConstraints constraints) {
+        for (var constraint : constraints.getConstraints()) {
             switch (constraint.getFieldName()) {
                 case "username":
                     stream = stream.filter(user -> constraint.matches(user.getUsername()));
@@ -275,7 +283,12 @@ public class UserService {
      *
      * @return List of users satisfying all the constraints specified
      */
-    public List<UserDto> findAll(@NonNull List<SearchConstraint> constraints) {
+    public List<UserDto> findAll(@NonNull SearchConstraints constraints) {
+                constraints.getConstraints().add(new SearchConstraint(
+                "deactivatedOn",
+                null,
+                SearchConstraint.MatchMode.IDENTITY
+        ));
         return addConstraints(userRepository.findAll().stream(), constraints)
                 .map(user -> {
                     var dto = UserDto.from(user);

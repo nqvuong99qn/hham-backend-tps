@@ -9,9 +9,6 @@ import java.util.Map;
 public class SuccessResponse {
     private final Map<String, Object> values = new HashMap<>();
 
-    {
-        values.put("success", true);
-    }
 
     @JsonAnyGetter
     public Map<String, Object> getValues() {

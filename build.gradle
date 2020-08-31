@@ -71,4 +71,5 @@ dependencies {
         exclude group: "junit"
         exclude group: "org.junit.vintage"
     }
+    compile group: 'org.springframework.security', name: 'spring-security-oauth2-client', version: '5.3.4.RELEASE'
 }

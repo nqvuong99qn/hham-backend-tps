@@ -24,28 +24,48 @@ import javax.annotation.security.RolesAllowed;
 public class JobTitleController {
     private final JobTitleService jobTitleService;
 
+    /**
+     * Using to get many job Titles  via constraints
+     * @param constraints (self-defined)
+     * @return List of job titles via constrainst
+     */
     @GetMapping
     @RolesAllowed("SYSADMIN")
     public SuccessResponse getMany(SearchConstraints constraints) {
         constraints.getConstraints().add(
                 new SearchConstraint("archivedOn", null, SearchConstraint.MatchMode.IDENTITY)
         );
-        return new SuccessResponse().put("data", jobTitleService.findAll(constraints.getConstraints()));
+        return new SuccessResponse().put("data", jobTitleService.findAll(constraints));
     }
 
+    /**
+     * Create new job title include of name, monthly amount to pay.
+     * @param dto
+     * @return DTO have created.
+     */
     @PostMapping
     @RolesAllowed("SYSADMIN")
     public SuccessResponse create(@RequestBody JobTitleDto dto) {
-        return new SuccessResponse().put("data",
-                jobTitleService.create(dto.getName(), dto.getMonthlyAmount()));
+        return new SuccessResponse().put("data", jobTitleService.create(dto.getName(), dto.getMonthlyAmount()));
     }
 
+    /**
+     * Get a jobTitle by id
+     * @param id
+     * @return DTO job title
+     */
     @GetMapping("{id:\\d+}")
     @RolesAllowed({ "SYSADMIN" })
-    public SuccessResponse get(@PathVariable int id) {
-        return new SuccessResponse().put("data", jobTitleService.get(id));
+    public SuccessResponse getOne(@PathVariable int id) {
+        return new SuccessResponse().put("data", jobTitleService.getOne(id));
     }
 
+    /**
+     * Update a Job Title if necessary
+     * @param id
+     * @param dto
+     * @return
+     */
     @PutMapping("/{id:\\d+}")
     @RolesAllowed("SYSADMIN")
     public SuccessResponse update(@PathVariable int id, @RequestBody JobTitleDto dto) {
@@ -53,6 +73,11 @@ public class JobTitleController {
                 jobTitleService.update(id, dto.getName(), dto.getMonthlyAmount()));
     }
 
+    /**
+     * Archive a Job Title.
+     * @param id
+     * @return
+     */
     @DeleteMapping("/{id:\\d+}")
     @RolesAllowed("SYSADMIN")
     public SuccessResponse archive(@PathVariable int id) {

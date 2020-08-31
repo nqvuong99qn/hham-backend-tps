@@ -38,7 +38,7 @@ public class SessionService {
     @Value("${com.tpssoft.hham.token-lifetime}")
     private int tokenLifetimeInSecond;
 
-    // Don't know why using attribute doesn't work, need to make it a method
+
     private Duration getDefaultTokenLifetime() {
         return Duration.ofSeconds(tokenLifetimeInSecond);
     }
@@ -86,13 +86,8 @@ public class SessionService {
         return createFor(username, ipAddress, userAgent, getDefaultTokenLifetime());
     }
 
-    public SessionDto createFor(String username,
-                                String ipAddress,
-                                String userAgent,
-                                Duration lifetime) {
-        var user = userRepository
-                .findByUsername(username)
-                .orElseThrow(UserNotFoundException::new);
+    public SessionDto createFor(String username, String ipAddress, String userAgent, Duration lifetime) {
+        var user = userRepository.findByUsername(username).orElseThrow(UserNotFoundException::new);
         String token = generateToken(tokenLength);
         var session = new Session();
         session.setUser(user);
@@ -122,7 +117,7 @@ public class SessionService {
         session.setExpiredOn(ZonedDateTime.now());
         sessionRepository.save(session);
     }
-
+    // Authentication login Request with information of user in DB
     public boolean authenticate(String username, String plainPassword) {
         var user = userRepository.findByUsername(username).orElse(null);
         return user != null && passwordEncoder.matches(plainPassword, user.getPassword());

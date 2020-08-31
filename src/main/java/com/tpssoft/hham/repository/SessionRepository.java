@@ -14,9 +14,7 @@ public interface SessionRepository extends JpaRepository<Session, Integer> {
 
     /**
      * Get all login sessions of a specific user, including expired ones.
-     *
      * @param id ID of the user
-     *
      * @return List of sessions belonging to the specified user
      */
     @Query("select s from sessions s join fetch users u where u.id = :id")
@@ -24,9 +22,7 @@ public interface SessionRepository extends JpaRepository<Session, Integer> {
 
     /**
      * Get all non-expired login sessions of a specific user
-     *
      * @param id ID of the user
-     *
      * @return List of non-expired sessions belonging to the specified user
      */
     @Query("select s from sessions s join fetch users u where u.id = :id and s.expiredOn > current_timestamp")

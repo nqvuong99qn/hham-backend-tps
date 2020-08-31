@@ -1,8 +1,10 @@
 package com.tpssoft.hham.controller;
 
+import com.sun.istack.NotNull;
 import com.tpssoft.hham.dto.UserDto;
 import com.tpssoft.hham.response.SuccessResponse;
 import com.tpssoft.hham.security.HhamUserDetails;
+import com.tpssoft.hham.service.FindConstraint;
 import com.tpssoft.hham.service.SearchConstraint;
 import com.tpssoft.hham.service.SearchConstraints;
 import com.tpssoft.hham.service.UserService;
@@ -27,27 +29,53 @@ import java.security.NoSuchAlgorithmException;
 public class UserController {
     private final UserService userService;
 
+    /**
+     * This API is using to get User with constraits.
+     *
+     * @param constraints
+     * @return
+     */
     @GetMapping
     @RolesAllowed("SYSADMIN")
-    public SuccessResponse getMany(@NonNull SearchConstraints constraints) {
-        constraints.getConstraints().add(new SearchConstraint(
-                "deactivatedOn",
-                null,
-                SearchConstraint.MatchMode.IDENTITY
-        ));
-        return new SuccessResponse()
-                .put("data", userService.findAll(constraints.getConstraints()));
+    public SuccessResponse getMany(@NotNull SearchConstraints constraints) {
+        return new SuccessResponse().put("data", userService.findAll(constraints));
     }
 
+    /**
+     * This API is using for get User by Id
+     * @param id
+     * @return
+     */
+    @GetMapping({"/{id:\\d+}"})
+    @RolesAllowed({"SYSADMIN"})
+    public SuccessResponse getOne(@PathVariable int id){
+        return new SuccessResponse().put("data", userService.findOne(id));
+    }
+
+    /**
+     * This API is using to invite new user.
+     *
+      * @param dto
+     * @param currentUser
+     * @return
+     * @throws NoSuchAlgorithmException
+     */
     @PostMapping("/invite")
     @RolesAllowed({ "SYSADMIN", "USER" })
-    public SuccessResponse invite(@RequestBody UserDto dto,
-                                  @AuthenticationPrincipal HhamUserDetails currentUser)
+    public SuccessResponse invite(@RequestBody UserDto dto, @AuthenticationPrincipal HhamUserDetails currentUser)
             throws NoSuchAlgorithmException {
         userService.invite(currentUser.getDisplayName(), currentUser.getEmail(), dto.getEmail());
         return new SuccessResponse();
     }
 
+    /**
+     * This API is using to invite new User into project (only Project Admin can do it)
+     * @param dto
+     * @param projectId
+     * @param currentUser
+     * @return
+     * @throws NoSuchAlgorithmException
+     */
     @PostMapping("/invite/{projectId}")
     @RolesAllowed({ "SYSADMIN", "USER" })
     public SuccessResponse inviteToProject(@RequestBody UserDto dto,
@@ -59,12 +87,12 @@ public class UserController {
         return new SuccessResponse();
     }
 
-    @GetMapping("/{id:\\d+}")
-    @RolesAllowed({ "SYSADMIN", "USER" })
-    public SuccessResponse get(@PathVariable int id) {
-        return new SuccessResponse().put("data", userService.get(id));
-    }
-
+    /**
+     * update information of User
+     * @param id
+     * @param dto
+     * @return
+     */
     @PutMapping("/{id:\\d+}")
     @RolesAllowed({ "SYSADMIN", "USER" })
     public SuccessResponse update(@PathVariable int id, @RequestBody UserDto dto) {
@@ -81,6 +109,11 @@ public class UserController {
         ));
     }
 
+    /**
+     * Deactive user then can active if by admin if necessary
+     * @param id
+     * @return
+     */
     @DeleteMapping("/{id:\\d+}")
     @RolesAllowed("SYSADMIN")
     public SuccessResponse deactivate(@PathVariable int id) {
