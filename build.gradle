@@ -72,4 +72,14 @@ dependencies {
         exclude group: "org.junit.vintage"
     }
     compile group: 'org.springframework.security', name: 'spring-security-oauth2-client', version: '5.3.4.RELEASE'
+
+    // https://mvnrepository.com/artifact/org.apache.httpcomponents/httpcore
+    compile group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.13'
+    // https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.12'
+    // https://mvnrepository.com/artifact/org.apache.httpcomponents/fluent-hc
+    compile group: 'org.apache.httpcomponents', name: 'fluent-hc', version: '4.5.12'
+
+
+
 }

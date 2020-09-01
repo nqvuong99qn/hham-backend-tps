@@ -39,8 +39,13 @@ public class VoteService {
         return stream;
     }
 
-    public List<VoteDto> findAll(List<SearchConstraint> constraints) {
-        return addConstraints(voteRepository.findAll().stream(), constraints)
+    /**
+     * get All votes in system
+     * @param constraints
+     * @return
+     */
+    public List<VoteDto> getAll(SearchConstraints constraints) {
+        return addConstraints(voteRepository.findAll().stream(), constraints.getConstraints())
                 .map(VoteDto::from)
                 .collect(Collectors.toList());
     }
@@ -84,14 +89,12 @@ public class VoteService {
      * @throws OptionNotFoundException if the option ID does not belong to a real option
      * @throws VoteNotFoundException   if the user didn't vote for the option
      */
-    public VoteDto delete(int userId, int optionId) {
+    public void delete(int userId, int optionId) {
         serviceHelper.ensureValidUserId(userId);
         serviceHelper.ensureValidOptionId(optionId);
         var vote = voteRepository
                 .findById(new VoteId(userId, optionId))
                 .orElseThrow(VoteNotFoundException::new);
-        var dto = VoteDto.from(vote);
         voteRepository.delete(vote);
-        return dto;
     }
 }

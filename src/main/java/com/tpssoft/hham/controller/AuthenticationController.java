@@ -43,6 +43,7 @@ public class AuthenticationController {
         return new SuccessResponse().put("session", session).put("user", user);
     }
 
+
     /**
      * Logout, destroy section.
      * @param currentUser

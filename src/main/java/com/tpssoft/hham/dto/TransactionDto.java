@@ -22,8 +22,7 @@ public class TransactionDto {
     private String transactionType;
     private Integer userId;
     private String username;
-    private List<JobTitleDto> jobTitleDtos = new ArrayList<>();
-
+    private List<JobTitleDto> jobTitleDtos;
     private Integer fundId;
     private Integer activityId;
     private String activityName;
@@ -39,7 +38,7 @@ public class TransactionDto {
                 transaction.getType().getName(),
                 transaction.getUser().getId(),
                 transaction.getUser().getUsername(),
-                new ArrayList<>(), // transaction.getUser().getJobTitle().getName(),
+                new ArrayList<>(),
                 transaction.getFund().getId(),
                 transaction.getActivity() != null ? transaction.getActivity().getId() : null,
                 transaction.getActivity() != null ? transaction.getActivity().getName() : null,
@@ -83,5 +82,4 @@ public class TransactionDto {
             transaction.setMemo(memo);
         }
     }
-
 }

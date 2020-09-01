@@ -11,4 +11,6 @@ import java.util.List;
 @Repository
 public interface VoteRepository extends JpaRepository<Vote, VoteId> {
     List<Vote> findAllByUserId(Integer userId);
+
+
 }

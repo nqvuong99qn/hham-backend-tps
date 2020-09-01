@@ -1,6 +1,7 @@
 package com.tpssoft.hham.controller;
 
 import com.tpssoft.hham.dto.VoteDto;
+import com.tpssoft.hham.entity.VoteId;
 import com.tpssoft.hham.response.SuccessResponse;
 import com.tpssoft.hham.security.HhamUserDetails;
 import com.tpssoft.hham.service.SearchConstraints;
@@ -26,26 +27,42 @@ import static com.tpssoft.hham.Helper.addConstraintFromParam;
 public class VoteController {
     private final VoteService voteService;
 
+    /**
+     * Get many votes via constraints
+     *
+     * @param constraints
+     * @param request
+     * @return
+     */
     @GetMapping
     @RolesAllowed({ "SYSADMIN", "USER" })
     public SuccessResponse getMany(SearchConstraints constraints, HttpServletRequest request) {
         addConstraintFromParam(constraints, request, "userId", Integer::valueOf);
         addConstraintFromParam(constraints, request, "activityId", Integer::valueOf);
-        return new SuccessResponse().put("data", voteService.findAll(constraints.getConstraints()));
+        return new SuccessResponse().put("data", voteService.getAll(constraints));
     }
 
+    /**
+     * Create new vote using usrID, optionID and note (if needed)
+     * @param currentUser
+     * @param dto
+     * @return
+     */
     @PostMapping
     @RolesAllowed({ "SYSADMIN", "USER" })
-    public SuccessResponse create(@AuthenticationPrincipal HhamUserDetails currentUser,
-                                  @RequestBody VoteDto dto) {
-        return new SuccessResponse().put("data",
-                voteService.create(currentUser.getId(), dto.getOptionId(), dto.getNote())
-        );
+    public SuccessResponse create(@AuthenticationPrincipal HhamUserDetails currentUser,@RequestBody VoteDto dto) {
+        return new SuccessResponse().put("data",voteService.create(currentUser.getId(), dto.getOptionId(), dto.getNote()));
     }
 
+    /**
+     * Remove vote if needed
+     * @param userId
+     * @param optionId
+     * @return
+     */
     @DeleteMapping("/{userId:\\d+}/{optionId:\\d+}")
     @RolesAllowed({ "SYSADMIN", "USER" })
-    public SuccessResponse remove(@PathVariable int userId, @PathVariable int optionId) {
-        return new SuccessResponse().put("data", voteService.delete(userId, optionId));
+    public void remove(@PathVariable int userId, @PathVariable int optionId) {
+        voteService.delete(userId, optionId);
     }
 }

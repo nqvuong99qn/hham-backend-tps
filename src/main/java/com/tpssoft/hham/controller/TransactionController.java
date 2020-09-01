@@ -24,14 +24,24 @@ public class TransactionController {
     private final TransactionService transactionService;
     private final EmailService emailService;
 
+    /**
+     * Get many transcation via constraints
+     * @param constraints
+     * @return
+     */
     @GetMapping
     @RolesAllowed({ "SYSADMIN", "USER" })
     public SuccessResponse getMany(SearchConstraints constraints) {
         return new SuccessResponse().put("data",
-                transactionService.findAll(constraints.getConstraints())
+                transactionService.findAll(constraints)
         );
     }
 
+    /**
+     * Create new tracsaction with information for client
+     * @param transactionDto
+     * @return
+     */
     @PostMapping
     @RolesAllowed({ "SYSADMIN", "USER" })
     public SuccessResponse create(@RequestBody TransactionDto transactionDto) {
@@ -39,6 +49,12 @@ public class TransactionController {
         return new SuccessResponse();
     }
 
+    /**
+     * Calculate fund when funding or spending
+     * @param id
+     * @param dto
+     * @return
+     */
     @PutMapping("/calc/{id}")
     @RolesAllowed({ "SYSADMIN", "USER" })
     public SuccessResponse calcFund(@PathVariable int id, @RequestBody FundDto dto) {
@@ -47,7 +63,11 @@ public class TransactionController {
         );
     }
 
-    // TODO: Move this to more appropriate place
+    /**
+     * Remind someone for funding
+     * @param dto
+     * @return
+     */
     @PostMapping("/remind")
     @RolesAllowed({ "SYSADMIN", "USER" })
     public SuccessResponse remind(@RequestBody TransactionDto dto) {
@@ -55,10 +75,14 @@ public class TransactionController {
         return new SuccessResponse();
     }
 
+    /**
+     * Get information of a transaction by transactionId
+     * @param id
+     * @return
+     */
     @GetMapping("/{id:\\d+}")
     @RolesAllowed({ "SYSADMIN", "USER" })
-    public SuccessResponse get(int id) {
-        return new SuccessResponse().put("data", transactionService.get(id));
+    public SuccessResponse getOne(int id) {
+        return new SuccessResponse().put("data", transactionService.getOne(id));
     }
-
 }

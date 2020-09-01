@@ -89,7 +89,11 @@ public class ProjectService {
      * @return Information of all projects in the system
      */
     public List<ProjectDto> findAll() {
-        return findAll(List.of());
+        return projectRepository
+                .findAll()
+                .stream()
+                .map(ProjectDto::from)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -99,8 +103,8 @@ public class ProjectService {
      *
      * @return Projects satisfying the given constraints
      */
-    public List<ProjectDto> findAll(List<SearchConstraint> constraints) {
-        return addConstraints(projectRepository.findAll().stream(), constraints)
+    public List<ProjectDto> findAll(SearchConstraints constraints) {
+        return addConstraints(projectRepository.findAll().stream(), constraints.getConstraints())
                 .map(ProjectDto::from)
                 .map(dto -> {
                     dto.getFunds().addAll(fundRepository
@@ -123,10 +127,8 @@ public class ProjectService {
      *
      * @throws ProjectNotFoundException if the ID provided does not belong to any project
      */
-    public ProjectDto get(int id) {
-        var dto = ProjectDto.from(projectRepository
-                .findById(id)
-                .orElseThrow(ProjectNotFoundException::new));
+    public ProjectDto getOne(int id) {
+        var dto = ProjectDto.from(projectRepository.findById(id).orElseThrow(ProjectNotFoundException::new));
         dto.setFunds(fundRepository
                 .findByProjectId(dto.getId())
                 .stream()
@@ -253,23 +255,19 @@ public class ProjectService {
                             dto.setJobTitle(JobTitleDto.from(jobTitle)));
                     return dto;
                 })
-
                 .map(dto -> {
                     var membership = membershipRepository
                             .findById(new MembershipId(projectId, dto.getId()))
                             .orElseThrow(MembershipNotFoundException::new);
                     dto.setAdmin(membership.isAdmin());
-                    //   dto.getTransDtos().addAll(transactionRepository.findByUserId(dto.getId()));
                     return dto;
                 })
-
                 .map(dto -> {
                     dto.getTransDtos().addAll(transactionRepository
                                 .findByUserId(dto.getId(), projectId)
                                 .stream()
                                 .map(TransactionDto::from)
                                 .collect(Collectors.toList()));
-
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -331,6 +329,13 @@ public class ProjectService {
         return userDto;
     }
 
+    /**
+     * Change rolo of member from member to admin and admin to member.
+     * @param projectId
+     * @param memberId
+     * @param changeToAdmin
+     * @return
+     */
     private UserDto changeRole(int projectId, int memberId, boolean changeToAdmin) {
         serviceHelper.ensureValidProjectId(projectId);
         serviceHelper.ensureValidUserId(memberId);
