@@ -54,7 +54,8 @@ public class SearchConstraint {
     public SearchConstraint(String fieldName, Object searchValue) {
         this(fieldName, searchValue, EQUALS);
     }
-
+/////////
+////
     /**
      * Construct a new search constraint.
      *
